@@ -79,9 +79,11 @@
         return false;
     }
 
+    var o = null; // Make options global
+
     var methods = {
         init : function(options) {
-            var o = $.extend({}, defaults, options);
+            o = $.extend({}, defaults, options);
 
             if (hasError(this, o)) { return this; }; // check for errors
             this.hide(); // hide original select box
@@ -191,14 +193,35 @@
         update : function() {
             var root = this;
             var v = this.val(); // current value of select box
-            this.data("dialog").find("li").each(function() {
-                if ($(this).data("value") == v) {
-                    $(this).addClass("selected");
-                    root.data("label").text($(this).data("name"));
-                } else {
-                    $(this).removeClass("selected");
-                };
-            });
+            if( $.isArray(v) )
+            {
+                this.data("dialog").find("li").each(function() {
+                    if($.inArray($(this).data("value"), v) >= 0) {
+                        $(this).addClass("selected");
+                    }
+                });
+                
+                // This way, we can handle multiple selections
+                var selected = this.find(":selected");
+                if(selected.length > o.maxDisplay)
+                    var label_text = "Multiple Selections"
+                else if(selected.length < 1)
+                    var label_text = o.prompt;
+                else
+                    var label_text = selected.map(function(){return $(this).text();}).get().join(", ");
+                
+                this.data("label").text(label_text);
+                   
+            } else {
+                this.data("dialog").find("li").each(function() {
+                    if ($(this).data("value") == v) {
+                        $(this).addClass("selected");
+                        root.data("label").text($(this).data("name"));
+                    } else {
+                        $(this).removeClass("selected");
+                    };
+                });
+            }
             return this;
         }
     };
